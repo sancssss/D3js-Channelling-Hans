@@ -1,5 +1,5 @@
 //Canvas config
-var margin = {top: 20, right: 30, bottom: 20, left: 50};
+var margin = {top: 40, right: 80, bottom: 20, left: 50};
 var width = 1000 - margin.left - margin.right;
 var height = 600 - margin.top - margin.bottom;
 
@@ -9,7 +9,7 @@ function yearFilter(value) {
 	return (value['Year'] == displayYear);
 }
 
-d3.select("body")
+d3.select(".main")
 	.append("mainCanvas")
 	.append("svg")
 	.attr("width", width + margin.left + margin.right)
@@ -19,8 +19,8 @@ d3.select("body")
 	.style("background", "aliceblue");
 
 var rawDataset;
-var filteredData, xScale, yScale, zScale, xAxis, yAxis, xValue, yValue;
-d3.csv("http://localhost:8000/GCI_CompleteData3.csv")
+var filteredData, xScale, yScale, zScale, xAxis, yAxis, xValue, yValue, animation, intervalId;
+d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
 	.then(function(data) {
 		rawDataset = data;
 		filteredData = rawDataset.filter(yearFilter);
@@ -35,45 +35,61 @@ d3.csv("http://localhost:8000/GCI_CompleteData3.csv")
 			.nice();			
 		zScale = d3.scaleSqrt()
 			.domain([0,1386395000])
-			.range([0, 60])
+			.range([0, 65])
 			.nice();
 		var xAxis = d3.axisBottom()
-	            .scale(xScale)
-	            .ticks(5);
+	            .scale(xScale);
+
 	    var yAxis = d3.axisLeft()
-	            .scale(yScale)
-	            .ticks(5);
-		//generate axis
+	            .scale(yScale);
+		//generate x axis 
 		d3.select("mainCanvas")
 			.select("g")
 			.append("g")
 			.attr("class", "x-axis")
 			.attr("transform", "translate(" + 0 + "," + height + ")")
-			.call(xAxis);
+			.call(xAxis)
+		//generate y axis
 		d3.select("mainCanvas")
 			.select("g")
 			.append("g")
 			.attr("class", "y-axis")
 			.call(yAxis);
+		//generate nodes group space
 		d3.select("mainCanvas")
 			.select("g")
 			.append("g")
 			.attr("class", "nodes")
+		// current year information
 		d3.select("mainCanvas")
 			.select("g")
 			.append("text")
 			.attr("class", "title")
-			.text("Year: " + displayYear);
-
-
-	 		setInterval(function() {
+			.text("Year: " + displayYear)
+			.attr("transform", "translate(" + width/2 + "," + -20 + ")");
+		//x axis label
+		d3.select("mainCanvas")
+			.select("g")
+			.append("text")
+			.attr("class", "x-axis-label")
+			.text("GDP")
+			.attr("transform", "translate(" + (width+15) + "," + (height+5) + ")");
+		//y axis label
+		d3.select("mainCanvas")
+			.select("g")
+			.append("text")
+			.attr("class", "y-axis-label")
+			.text("Global Competitiveness Index")
+			.attr("transform", "translate(" + -10 + "," + -8 + ")")
+			animation = function() {
 				if(displayYear > 2017){
 					displayYear = 2007;
 				}
 				console.log(displayYear)
 				generateVis();
 				displayYear = displayYear + 1;
-			}, 1200);
+			}
+	 		intervalId = window.setInterval(animation, 1200);
 
 	})
 
@@ -82,22 +98,22 @@ function generateVis() {
 	var countryPoints = d3.select("mainCanvas")
 		.select(".nodes")//first
 		.selectAll("g")
-		.data(filteredData, function(d) { return d.Country; })
+		.data(filteredData, function(d) { return d.Country })
 
 	//enter
 	var newCountryPoints = countryPoints.enter()
 	var nodeEnter = newCountryPoints.append("g")
-	
     nodeEnter.append("circle")
     nodeEnter.append("text")
 	countryPoints = newCountryPoints.merge(countryPoints)
+
 	countryPoints.select("circle")
 		.transition()
 		.duration(1500)
 		.attr("r", function(d) { return zScale(d.Population)})
     	.attr("transform",function(d) { return "translate("+xScale(d.GDP)+","+yScale(d.Global_Competitiveness_Index)+")"})
 		.style("fill", function(d) { return circleColourBySize(zScale(d.Population)) })
-		.style("opacity", 0.7)
+		.style("opacity", 0.6)
 		.style("stroke", "black")
 		.style("stroke-width", "0.5")
 
@@ -105,18 +121,18 @@ function generateVis() {
 		.transition()
 		.duration(1500)
 		.text(function(d) {
+			//if the population is big enough, then show country label
 			if(zScale(d.Population) > 18)
 				return d.Country;
 		})
 		.attr("transform",function(d) { return "translate("+xScale(d.GDP)+","+yScale(d.Global_Competitiveness_Index)+")"})
 		.style("font-size",  function(d) { return zScale(d.Population)/3 + "pt" })
 
-    xValue = filteredData.map(function(d) {return d.Country});
- 	yValue = filteredData.map(function(d) {return d.Country});
 	d3.select("mainCanvas")
 		.select(".title")
+		.transition()
+		.duration(1500)
 		.text("Year: " + displayYear);
-
 	//exit
  	countryPoints.exit()
  	 	.transition()
@@ -137,4 +153,26 @@ function circleColourBySize(size) {
 	} else {
 		return "#dd4477";
 	}
+}
+
+function updateToYear(year) {
+	displayYear = year;
+	generateVis();
+}
+
+function startAnimation() {
+	if(intervalId != null) {
+		intervalId = window.setInterval(animation ,1200);
+	}
+}
+
+function stopAnimation() {
+	console.log("stop");
+	window.clearInterval(intervalId);
+	updateToYear(2007)
+}
+
+function pauseAnimation() {
+	console.log("pause");
+	window.clearInterval(intervalId);
 }

@@ -4,8 +4,36 @@
 	<meta charset="utf-8">
 	<title>D3.js Channelling Hans</title>
 <script src="https://d3js.org/d3.v5.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 </head>
 <body>
-<script src="./index.js" charset="utf-8"></script>
+<div class="container">
+	<div class="row">
+		<div class="main">
+			<script src="./index.js" charset="utf-8"></script>
+		</div>
+	</div>
+	<div class="row" style="margin-top:15px; margin-left:20px">
+		<button type="button" class="btn btn-outline-success" onclick="startAnimation()">Play</button>
+		<button type="button" class="btn btn-outline-danger" style="margin-left:10px;" onclick="stopAnimation()">Stop</button>
+		<button type="button" class="btn btn-outline-danger" style="margin-left:10px;" onclick="pauseAnimation()">Pause</button>
+		<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups" style="margin-left:10px;">
+		  	<div class="btn-group mr-2" role="group" aria-label="First group">
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2007)">2007</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2008)">2008</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2009)">2009</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2010)">2010</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2011)">2011</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2012)">2012</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2013)">2013</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2014)">2014</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2015)">2015</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2016)">2016</button>
+		    <button type="button" class="btn btn-secondary" onclick="updateToYear(2017)">2017</button>
+	  	</div>
+	</div>
+</div>
 </body>
 </html>
