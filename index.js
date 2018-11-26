@@ -4,9 +4,13 @@ var width = 1000 - margin.left - margin.right;
 var height = 600 - margin.top - margin.bottom;
 
 //initial value
-var displayYear = 2007
+var displayYear = 2007;
+var selectedCountry = "";
 function yearFilter(value) {
 	return (value['Year'] == displayYear);
+}
+function countryFilter(value) {
+	return (value['Country'] == selectedCountry);
 }
 
 d3.select(".main")
@@ -20,7 +24,7 @@ d3.select(".main")
 
 var rawDataset;
 var filteredData, xScale, yScale, zScale, xAxis, yAxis, xValue, yValue, animation, intervalId;
-d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
+d3.csv("http://localhost:8000/GCI_CompleteData4.csv")
 	.then(function(data) {
 		rawDataset = data;
 		filteredData = rawDataset.filter(yearFilter);
@@ -96,9 +100,12 @@ d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
 function generateVis() {
 	filteredData = rawDataset.filter(yearFilter);
 	var countryPoints = d3.select("mainCanvas")
-		.select(".nodes")//first
+		.select(".nodes")
 		.selectAll("g")
 		.data(filteredData, function(d) { return d.Country })
+		.on("mouseover", handleMouseover)//display the label of a country
+		.on("mouseout", handleMouseout)//remove the label of a country
+		.on("click", handleClick)//generate the trace or remove the trace
 
 	//enter
 	var newCountryPoints = countryPoints.enter()
@@ -127,6 +134,7 @@ function generateVis() {
 		})
 		.attr("transform",function(d) { return "translate("+xScale(d.GDP)+","+yScale(d.Global_Competitiveness_Index)+")"})
 		.style("font-size",  function(d) { return zScale(d.Population)/3 + "pt" })
+		.style("opacity", 0.6);
 
 	d3.select("mainCanvas")
 		.select(".title")
@@ -155,9 +163,64 @@ function circleColourBySize(size) {
 	}
 }
 
+//add the country label when move mouse on a bubble
+function handleMouseover(d) {
+	console.log(d.Country)
+	//if the population is big enough, then show country label
+	if(zScale(d.Population) <= 18){
+		d3.select(this).select("text")
+		.text(function(d) { return d.Country; })
+		.attr("transform",function(d) { return "translate("+xScale(d.GDP)+","+yScale(d.Global_Competitiveness_Index)+")"})
+		.style("font-size",  "18pt")
+	}
+}
+//remove the country label when move mouse on a bubble
+function handleMouseout(d) {
+	console.log(d.Country)
+	if(zScale(d.Population) <= 18){
+		d3.select(this).select("text")
+		.text("")//set empty label
+	}	
+}
+//obtain a countrys' data from 2007 to 2017
+function handleClick(d) {
+	pauseAnimation();//stop the animation;
+	selectedCountry = d.Country;
+	var filteredCountryData = rawDataset.filter(countryFilter);
+	console.log(filteredCountryData);
+	var countryPoints = d3.select(".nodes").selectAll("g");
+	
+	countryPoints.select("circle")
+	.style("opacity", 0.3);//set all of nodes to be more transparent
+
+	countryPoints.select("text")
+	.style("opacity", 0.3);//set all of nodes to be more transparent
+	xValue = filteredCountryData.map(function(d){return d.GDP});
+	yValue = filteredCountryData.map(function(d){return d.Global_Competitiveness_Index});
+	zValue = filteredCountryData.map(function(d){return d.Population});
+	for (var i = 0; i < xValue.length; i++) {
+		d3.select(".nodes")
+			.append("circle")
+			.attr("r",zScale(zValue[i]))
+			.attr("cx", xScale(xValue[i]))
+			.attr("cy", yScale(yValue[i]))
+			.style("fill", circleColourBySize(zScale(zValue[i])))
+			.style("opacity", 0.7)
+			.style("stroke", "black")
+			.style("stroke-width", "0.5")
+	}
+	d3.select(".nodes")
+		.append("text")
+		.text(d.Country)
+		.attr("x", xScale(xValue[1]))
+		.attr("y", yScale(yValue[1]))
+		.style("font-size", "15pt")
+}
+
 function updateToYear(year) {
 	displayYear = year;
 	generateVis();
+	pauseAnimation();
 }
 
 function startAnimation() {
@@ -169,7 +232,7 @@ function startAnimation() {
 function stopAnimation() {
 	console.log("stop");
 	window.clearInterval(intervalId);
-	updateToYear(2007)
+	updateToYear(2007);
 }
 
 function pauseAnimation() {
