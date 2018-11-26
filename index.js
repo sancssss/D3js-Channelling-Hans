@@ -98,6 +98,7 @@ d3.csv("http://localhost:8000/GCI_CompleteData4.csv")
 	})
 
 function generateVis() {
+	d3.selectAll(".trace-nodes").remove();//remove all trace before starting
 	filteredData = rawDataset.filter(yearFilter);
 	var countryPoints = d3.select("mainCanvas")
 		.select(".nodes")
@@ -208,13 +209,15 @@ function handleClick(d) {
 			.style("opacity", 0.7)
 			.style("stroke", "black")
 			.style("stroke-width", "0.5")
+			.attr("class", "trace-nodes");
 	}
 	d3.select(".nodes")
 		.append("text")
 		.text(d.Country)
 		.attr("x", xScale(xValue[1]))
 		.attr("y", yScale(yValue[1]))
-		.style("font-size", "15pt")
+		.attr("class", "trace-nodes")
+		.style("font-size", "15pt");
 }
 
 function updateToYear(year) {
