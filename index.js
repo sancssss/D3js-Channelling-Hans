@@ -12,6 +12,7 @@ var eHeight = 600 - eMargin.top - eMargin.bottom;
 var displayYear = 2007;
 var selectedCountry = "";//for country trace
 var showLineCountries = [];//for extra canvas to show lines
+var showLineCountriesColours = ["#3366cc", "#dc3912", "#ff9900", "#109618", "black"];//for line colour
 
 function yearFilter(value) {
 	return (value['Year'] == displayYear);
@@ -54,7 +55,7 @@ d3.select("mainCanvas")
 
 var rawDataset;
 var filteredData, filteredYearCountryData, xScale, yScale, zScale, xAxis, yAxis, xValue, yValue, xScaleExtra, yScaleExtra, animation, intervalId;
-d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
+d3.csv("http://localhost:8000/GCI_CompleteData4.csv")
 	.then(function(data) {
 		rawDataset = data;
 		filteredData = rawDataset.filter(yearFilter);
@@ -118,7 +119,7 @@ d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
 		//------for extra canvas--------
 		yScaleExtra = d3.scaleSqrt()
 			.domain([0, 7])
-			.range([eHeight-100, 0])
+			.range([eHeight-20, 0])
 			.nice();//for index
 		xScaleExtra = d3.scaleBand()
 			.range([0,380]);//for index
@@ -131,7 +132,7 @@ d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
 			.select("g")
 			.append("g")
 			.attr("class", "x-axis")
-			.attr("transform", "translate(" + 0 + "," + (height-80) + ")")
+			.attr("transform", "translate(" + 0 + "," + height + ")")
 			.call(xAxisExtra)
 		//generate y axis for extra canvas
 		d3.select(".extraCanvas")
@@ -145,7 +146,22 @@ d3.csv("http://localhost:8000/GCI_CompleteData2.csv")
 			.select("g")
 			.append("g")
 			.attr("class", "lines")
-	
+		//for colour country name
+		d3.select(".extraCanvas")
+			.select("g")
+			.append("g")
+			.attr("class", "colourCountryText")
+		//instruction information
+		d3.select(".extraCanvas")
+			.select("g")
+			.append("text")
+			.attr("x", eWidth/8)
+			.attr("y", eHeight/2)
+			.attr("style", "moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;")
+			.style("font-size", "15pt")
+			.style("opacity", 0.3)
+			.text("Please click the country bubble")
+			.attr("class", "extra-information");
 		//set animation
 			animation = function() {
 				if(displayYear > 2017){
@@ -234,42 +250,53 @@ function generateVis() {
 		console.log("linedata"+lineData)
 		lineHandledData.push(lineData);
 	}
-	console.log("handed data lists" + lineHandledData);
-	var linesSvg = d3.select(".extraCanvas").select(".lines").selectAll("path")
+	//console.log("handed data lists" + lineHandledData);
+	if(showLineCountries.length != 0 ) {
+		d3.select(".extra-information").remove();
+	}
+	var linesSvg = d3.select(".extraCanvas")
+		.select(".lines")
+		.selectAll("path")
 		.data(lineHandledData);
-
 	linesSvg.enter()
 		.append("path")
 		.transition()
 		.duration(1300)
 		.attr("d", function(d, i) {return lineFunc(lineHandledData[i])})
-		.attr("stroke", "blue")
+		.attr("stroke", function(d, i) {return showLineCountriesColours[i]})
 		.attr("fill", "none")
-		.attr("transform", "translate(" +0 + "," + 10 + ")");
+		.attr("transform", "translate(" +0 + "," + 10 + ")")
+		.attr("class", "country-path");
 	linesSvg.transition()
 		.duration(1500)
+		.attr("stroke", function(d, i) {return showLineCountriesColours[i]})
 		.attr("d", function(d, i) {return lineFunc(lineHandledData[i])});
 
+	var colourCountryText = d3.select(".extraCanvas")
+		.select(".colourCountryText")
+		.selectAll("text")
+		.data(showLineCountries)
+	colourCountryText.enter()
+		.append("text")
+		.attr("class", "colourCountryText")
+		.transition()
+		.duration(1300)
+		.attr("x", 5)
+		.attr("y", function(d, i) { return (eHeight-100+i*15)})
+		.style("fill", function(d, i) {return showLineCountriesColours[i]})
+		.text(function (d) {return d;});
+	colourCountryText.transition()
+		.duration(1500)
+		.attr("x", 5)
+		.attr("y", function(d, i) { return (eHeight-100+i*15)})
+		.style("fill", function(d, i){ return showLineCountriesColours[i]} )
+		.text(function (d) {return d;});
 	//exit
  	countryPoints.exit()
  	 	.transition()
  	 	.duration(500)
  		.style("fill", "red")
  		.remove();
-}
-
-function circleColourBySize(size) {
-	if(size > 35) {
-		return "#3366cc";
-	} else if (size > 25) {
-		return "#dc3912";
-	} else if (size > 15) {
-		return "#ff9900";
-	} else if (size > 5) {
-		return "#109618";
-	} else {
-		return "#dd4477";
-	}
 }
 
 //add the country label when move mouse on a bubble
@@ -329,8 +356,31 @@ function handleClick(d) {
 			.attr("class", "trace-nodes")
 			.style("font-size", "15pt");
 	} else {
-		showLineCountries.push(d.Country);
-		generateVis();
+		if(showLineCountries.indexOf(d.Country) != -1) {
+			//do not reload visualisation
+		} else {
+			if(showLineCountries.length <= 5) {
+				showLineCountries.push(d.Country);
+			} else {
+				showLineCountries.shift();//maximum 5 countries lines
+				showLineCountries.push(d.Country);
+			}
+			generateVis();
+		}
+	}
+}
+
+function circleColourBySize(size) {
+	if(size > 35) {
+		return "#3366cc";
+	} else if (size > 25) {
+		return "#dc3912";
+	} else if (size > 15) {
+		return "#ff9900";
+	} else if (size > 5) {
+		return "#109618";
+	} else {
+		return "#dd4477";
 	}
 }
 
@@ -359,4 +409,21 @@ function pauseAnimation() {
 		console.log("pause");
 		window.clearInterval(intervalId);
 	}
+}
+
+function resetLineChart() {
+	d3.selectAll(".country-path").remove();
+	d3.selectAll(".colourCountryText").remove();
+	showLineCountries = [];
+	//instruction information
+		d3.select(".extraCanvas")
+			.select("g")
+			.append("text")
+			.attr("x", eWidth/8)
+			.attr("y", eHeight/2)
+			.attr("style", "moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;")
+			.style("font-size", "15pt")
+			.style("opacity", 0.3)
+			.text("Please click the country bubble")
+			.attr("class", "extra-information");
 }
