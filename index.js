@@ -146,11 +146,11 @@ d3.csv("http://localhost:8000/GCI_CompleteData4.csv")
 			.select("g")
 			.append("g")
 			.attr("class", "lines")
-		//for colour country name
+		//for coloured country name
 		d3.select(".extraCanvas")
 			.select("g")
 			.append("g")
-			.attr("class", "colourCountryText")
+			.attr("class", "labels")
 		//instruction information
 		d3.select(".extraCanvas")
 			.select("g")
@@ -229,18 +229,18 @@ function generateVis() {
 			.x(function(d) { return d.x })
 			.y(function(d) { return d.y });
 
+	//this part is to extract 12 pillars data for line chart
 	var lineHandledData = [];
-	for (var i = 0; i < filteredYearCountryData.length; i++) {//extract 12 pillars data 
+	for (var i = 0; i < filteredYearCountryData.length; i++) {
 		var countryData = filteredYearCountryData[i];
 		var lineData = [];
 		var ithAttr = 1;//control the loop
-		console.log("countryData"+ countryData)
 		for(attr in countryData) {
 			if(ithAttr > 2) {
 				var newObj = {};
 				newObj.x = (ithAttr-2)*(eWidth/14);
 				newObj.y = yScaleExtra(countryData[attr]);
-				lineData.push(newObj);
+				lineData[lineData.length] = newObj;
 			}
 			if(ithAttr == 14) {
 				break;
@@ -248,16 +248,18 @@ function generateVis() {
 			ithAttr++;
 		}
 		console.log("linedata"+lineData)
-		lineHandledData.push(lineData);
+		lineHandledData[lineHandledData.length] = lineData;
 	}
-	//console.log("handed data lists" + lineHandledData);
+	//remove information label if has countries in list
 	if(showLineCountries.length != 0 ) {
 		d3.select(".extra-information").remove();
 	}
+	//TODO: sometimes the colour with country data is not matched
+	//this part is for showing coloured country line chart
 	var linesSvg = d3.select(".extraCanvas")
 		.select(".lines")
 		.selectAll("path")
-		.data(lineHandledData);
+		.data(lineHandledData, function(d, i) { return showLineCountries[i] });
 	linesSvg.enter()
 		.append("path")
 		.transition()
@@ -271,11 +273,11 @@ function generateVis() {
 		.duration(1500)
 		.attr("stroke", function(d, i) {return showLineCountriesColours[i]})
 		.attr("d", function(d, i) {return lineFunc(lineHandledData[i])});
-
+	//this part is for showing coloured country label with the index
 	var colourCountryText = d3.select(".extraCanvas")
-		.select(".colourCountryText")
+		.select(".labels")
 		.selectAll("text")
-		.data(showLineCountries)
+		.data(showLineCountries, function(d, i) { return showLineCountries[i] })
 	colourCountryText.enter()
 		.append("text")
 		.attr("class", "colourCountryText")
@@ -284,15 +286,28 @@ function generateVis() {
 		.attr("x", 5)
 		.attr("y", function(d, i) { return (eHeight-100+i*15)})
 		.style("fill", function(d, i) {return showLineCountriesColours[i]})
-		.text(function (d) {return d;});
+		.text(function (d, i) {return d + " " + filteredYearCountryData[i].Global_Competitiveness_Index;});
 	colourCountryText.transition()
 		.duration(1500)
 		.attr("x", 5)
 		.attr("y", function(d, i) { return (eHeight-100+i*15)})
-		.style("fill", function(d, i){ return showLineCountriesColours[i]} )
-		.text(function (d) {return d;});
+		.style("fill", function(d, i) { 
+			console.log("fill colour" + i + showLineCountriesColours[i])
+			return showLineCountriesColours[i]
+		 })
+		.text(function (d, i) {return d + " " + filteredYearCountryData[i].Global_Competitiveness_Index;});
 	//exit
  	countryPoints.exit()
+ 	 	.transition()
+ 	 	.duration(500)
+ 		.style("fill", "red")
+ 		.remove();
+ 	colourCountryText.exit()
+ 	 	.transition()
+ 	 	.duration(500)
+ 		.style("fill", "red")
+ 		.remove();
+ 	linesSvg.exit()
  	 	.transition()
  	 	.duration(500)
  		.style("fill", "red")
@@ -359,7 +374,7 @@ function handleClick(d) {
 		if(showLineCountries.indexOf(d.Country) != -1) {
 			//do not reload visualisation
 		} else {
-			if(showLineCountries.length <= 5) {
+			if(showLineCountries.length < 5) {
 				showLineCountries.push(d.Country);
 			} else {
 				showLineCountries.shift();//maximum 5 countries lines
@@ -395,12 +410,12 @@ function startAnimation() {
 		intervalId = window.setInterval(animation ,1200);
 	}
 }
-
+//TODO: sometimes the stop do not have effect
 function stopAnimation() {
 	if(intervalId != null) {
 		console.log("stop");
-		window.clearInterval(intervalId);
 		updateToYear(2007);
+		window.clearInterval(intervalId);
 	}
 }
 
