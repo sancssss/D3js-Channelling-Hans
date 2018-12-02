@@ -15,7 +15,7 @@ The missing data is replaced by the average value by using RapidMiner.
 * For those have huge popluation countries directly show the country name labels, while for the other countries, the country name will be displayed when the **Move Mouse Over** the bubble.
 * Ability to view data for a particular year (2007 - 2017).
 * Ability to animate the change in country statistics from year to year (2007 – 2017). By clicking the buttons to control animation status (**Play, Stop and Pause**).
-* By pressing **Alt + Right Mouse Click** at the same time, the animation will be stopped, clicked country will show its bubble trace (The all of data of the clicked country from 2007 to 2017).
+* By pressing **Alt + Left Mouse Click** at the same time, the animation will be stopped, clicked country will show its bubble trace (The all of data of the clicked country from 2007 to 2017).
 
 ### Extra Canvas
 * Add an extra connected visualisation that shows the individual pillars of the Global Competitiveness Index by line chart for a **clicked** country.
