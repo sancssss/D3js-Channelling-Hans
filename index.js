@@ -12,7 +12,7 @@ var eHeight = 600 - eMargin.top - eMargin.bottom;
 var displayYear = 2007;
 var selectedCountry = "";//for country trace
 var showLineCountries = [];//for extra canvas to show lines
-var showLineCountriesColours = ["#3366cc", "#dc3912", "#ff9900", "#109618", "black"];//for line colour
+var showLineCountriesColours = ["#3366cc", "#dc3912", "#ff9900", "#109618", "black"];//for line/label colour in extra canvas
 
 function yearFilter(value) {
 	return (value['Year'] == displayYear);
@@ -55,7 +55,7 @@ d3.select("mainCanvas")
 
 var rawDataset;
 var filteredData, filteredYearCountryData, xScale, yScale, zScale, xAxis, yAxis, xValue, yValue, xScaleExtra, yScaleExtra, animation, intervalId;
-d3.csv("http://localhost:8000/GCI_CompleteData4.csv")
+d3.csv("./GCI_CompleteData5.csv")
 	.then(function(data) {
 		rawDataset = data;
 		filteredData = rawDataset.filter(yearFilter);
@@ -224,7 +224,14 @@ function generateVis() {
 		.style("opacity", 0.3)
 		.text(displayYear);
 
+	//this part is to keep the order of filtered data and colour/index
 	filteredYearCountryData = rawDataset.filter(yearFilter).filter(countriesFilter);//filtered data from showLineCountries
+	var newFilteredYearCountryData = new Array(showLineCountries.length);
+	for (var i = filteredYearCountryData.length - 1; i >= 0; i--) {
+		newFilteredYearCountryData[showLineCountries.indexOf(filteredYearCountryData[i].Country)] = filteredYearCountryData[i];
+	}
+	filteredYearCountryData = newFilteredYearCountryData;
+
 	var lineFunc = d3.line()
 			.x(function(d) { return d.x })
 			.y(function(d) { return d.y });
@@ -254,12 +261,11 @@ function generateVis() {
 	if(showLineCountries.length != 0 ) {
 		d3.select(".extra-information").remove();
 	}
-	//TODO: sometimes the colour with country data is not matched
 	//this part is for showing coloured country line chart
 	var linesSvg = d3.select(".extraCanvas")
 		.select(".lines")
 		.selectAll("path")
-		.data(lineHandledData, function(d, i) { return showLineCountries[i] });
+		.data(lineHandledData);
 	linesSvg.enter()
 		.append("path")
 		.transition()
@@ -277,7 +283,7 @@ function generateVis() {
 	var colourCountryText = d3.select(".extraCanvas")
 		.select(".labels")
 		.selectAll("text")
-		.data(showLineCountries, function(d, i) { return showLineCountries[i] })
+		.data(showLineCountries)
 	colourCountryText.enter()
 		.append("text")
 		.attr("class", "colourCountryText")
@@ -291,10 +297,7 @@ function generateVis() {
 		.duration(1500)
 		.attr("x", 5)
 		.attr("y", function(d, i) { return (eHeight-100+i*15)})
-		.style("fill", function(d, i) { 
-			console.log("fill colour" + i + showLineCountriesColours[i])
-			return showLineCountriesColours[i]
-		 })
+		.style("fill", function(d, i) { return showLineCountriesColours[i] })
 		.text(function (d, i) {return d + " " + filteredYearCountryData[i].Global_Competitiveness_Index;});
 	//exit
  	countryPoints.exit()
@@ -372,12 +375,12 @@ function handleClick(d) {
 			.style("font-size", "15pt");
 	} else {
 		if(showLineCountries.indexOf(d.Country) != -1) {
-			//do not reload visualisation
+			//do not reload visualisation if the country already existed
 		} else {
-			if(showLineCountries.length < 5) {
+			if(showLineCountries.length < 5) { // maxmium 5 countries
 				showLineCountries.push(d.Country);
 			} else {
-				showLineCountries.shift();//maximum 5 countries lines
+				resetLineChart();
 				showLineCountries.push(d.Country);
 			}
 			generateVis();
