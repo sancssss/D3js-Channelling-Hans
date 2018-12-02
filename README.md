@@ -8,7 +8,7 @@ The missing data is replaced by the average value by using RapidMiner.
 ![img1](https://s3-eu-west-1.amazonaws.com/d3js-channelling-hans/2.png)
 <br>
 ![img2](https://s3-eu-west-1.amazonaws.com/d3js-channelling-hans/1.png)
-##Introduction
+## Introduction
 ### Main Canvas
 * Countries of the world described by GDP and Global Competitive Index mapped to x-axis and y-axis position respectively, each bubble represent a country.
 * Different size of population ranges of the country has different colours (mapping colours to population).
