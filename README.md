@@ -24,7 +24,7 @@ The missing data is replaced by the average value by using RapidMiner.
 * All lines in the extra canvas is mapped to different colours for distinguishing different countries. The Country name and the index will show simultaneously.
 * Users can click "**Reset Line Chart**" button to reset the extra canvas.
 
-### Depolyment
+### Deployment
 * Deployed on Amazon S3: [Click here](https://s3-eu-west-1.amazonaws.com/d3js-channelling-hans/index.html)
 
 
